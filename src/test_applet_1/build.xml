@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<project name="Build, convert, download and instantiate monop" basedir="." default = "instantiation">
+
+
+    <property file="${basedir}/package.properties"/>
+
+
+    <target name="compile">
+        <javac destdir="${classroot.dir}"
+               compiler="javac1.5"
+               debug="true"
+               includeantruntime="false">
+            <src>
+                <pathelement path="${src.dir}/${package}"/>
+            </src>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+
+    <target name="convert" depends="compile">
+        <convert PackageName="${package}"
+                 PackageAID="${package.AID}"
+                 MajorMinorVersion="${package.version}"
+                 CAP="true"
+                 EXP="true"
+                 ClassDir="${classroot.dir}">
+            <classpath refid="classpath"/>
+            <AppletNameAID appletname="${package.appletName}" aid="${package.appletAID}"/>
+        </convert>
+    </target>
+
+
+    <target name="download" depends="convert">
+        <deploycap CapFile="${classroot.dir}/${package}/javacard/${package}.cap"
+                   CrefExe="${env.JC_HOME}/bin/cref"
+                   inEEFile="${eepromImg}"
+                   outEEFile="${eepromImg}">
+            <classpath refid="classpath"/>
+        </deploycap>
+    </target>
+
+
+    <target name="instantiation" depends="download">
+        <tempfile property="temp.file" suffix=".script" prefix="" deleteonexit="true"/>
+        <propertyregex property="newAID" override="true" regexp=":" replace=" " input="${package.appletAID}"/>
+        <echo file="${temp.file}">powerup;
+0x00 0xA4 0x04 0x00 0x09 0xa0 0x00 0x00 0x00 0x62 0x03 0x01 0x08 0x01 0x7F;
+0x80 0xB8 0x00 0x00 0x0D 0x0B ${newAID} 0X00 0X7F;
+powerdown;</echo>
+        <apdutool ScriptFile="${temp.file}"
+                  CrefExe="${env.JC_HOME}/bin/cref"
+                  inEEFile="${eepromImg}"
+                  outEEFile="${eepromImg}">
+            <classpath refid="classpath"/>
+        </apdutool>
+    </target>
+</project>

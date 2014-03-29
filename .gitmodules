@@ -1,0 +1,3 @@
+[submodule "lib/libcapfile"]
+	path = lib/libcapfile
+	url = git@github.com:jfhren/libcapfile.git

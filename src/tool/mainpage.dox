@@ -1,0 +1,73 @@
+/**
+ * \mainpage
+ * The automated implementation tool allows existing applets to be tweaked into
+ * sync compliant ones. In this document, we will describe the big picture of
+ * the process and answer the question "what is done where?". Developers are
+ * invited to take a look at the source files for greater details about the
+ * implementation and inner working.
+ * 
+ * The automated implementation requires a few steps.
+ * 
+ * The first step is to unzip and parse the CAP file into a straightforward
+ * representation as described by the Java Card 2.2.2 virtual machine
+ * specification. The C header file located at cap_file.h defines this
+ * representation and the parsing is done by the ::read_cap_file function in
+ * the cap_file_reader.c file.
+ * 
+ * The second step is the transformation of the straightforward representation
+ * into an analyzed one (defined in the C header file located at
+ * analyzed_cap_file.h) where information about classes, interfaces, methods
+ * and fields are organized in a hierarchical and unified way. To achieve this,
+ * offsets and indexes are resolved to their real contents.
+ * 
+ * For example, a method description and implementation are put together and
+ * the resulting method is associated with its class.
+ * 
+ * Each imported packages is associated with its export file.
+ * 
+ * The nibbles in the signature pool of the descriptor component are converted
+ * to a more usable format while associating each reference with its constant
+ * pool counterpart.
+ * 
+ * Each constant pool entry is associated with what is referenced; a virtual
+ * method constant pool entry is associated with the method it represents for
+ * example.
+ * 
+ * Each interface is associated with its methods and its superinterface (if
+ * any).
+ * 
+ * Each class is associated with its methods, its fields and its superclass (if
+ * any).
+ * 
+ * Each method is associated with its bytecode and exception handlers as well
+ * as its signature within the signature pool. Missing constant pool and
+ * signature pool entries are added.
+ * 
+ * This hierarchical representation permits to navigate within the classes when
+ * seeking information and eases the addition of new elements.
+ * 
+ * This transformation is done by the ::analyze_cap_file function in the
+ * cap_file_analyze.c file.
+ * 
+ * The third step is the actual tweaking and is done on the analyzed
+ * representation of the original CAP file. The Synchronizable interface is
+ * added to each class. Associated methods and supporting fields are added to
+ * each class. Each class extending the Applet class is tweaked to extend the
+ * SyncApplet class. Protected methods are added if needed for dealing with
+ * static fields. Each time bytecode is generated for each added method making
+ * use of the added fields. The entry point is the ::add_sync_to_cap_file
+ * function in the tweak_cap_file.c file.
+ * 
+ * The fourth step is the transformation from the tweaked and analyzed
+ * representation to the straightforward representation with recomputed offsets
+ * and token, regenerated constant and signature pools and compacted bytecode
+ * (for example using getfield_a_this instead of aload_0 and getfield_a).
+ * Offsets are recomputed for everything including bytecode. This step in done
+ * by a call to the ::generate_cap_file function in the cap_file_generate.c
+ * file.
+ * 
+ * The fifth step is the output of the straightforward representation into a
+ * CAP file. Each component is generated as well as the manifest and is zipped
+ * into the resulting CAP file. The output is done by the ::write_cap_file
+ * function in the cap_file_writer.c file.
+ */

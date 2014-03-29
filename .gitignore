@@ -1,0 +1,10 @@
+*.cap
+*.exp
+*.class
+*.o
+*.a
+buildenv
+doc/
+class/
+bin/
+eeprom/

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<project name="Build, convert, and download syncApplet" basedir="." default = "download">
+
+
+    <property file="${basedir}/package.properties"/>
+
+
+    <target name="compile">
+        <javac destdir="${classroot.dir}"
+               compiler="javac1.5"
+               debug="true"
+               includeantruntime="false">
+            <src>
+                <pathelement path="${src.dir}/${package}"/>
+            </src>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+
+    <target name="convert" depends="compile">
+        <convert PackageName="${package}"
+                 PackageAID="${package.AID}"
+                 MajorMinorVersion="${package.version}"
+                 CAP="true"
+                 EXP="true"
+                 ClassDir="${classroot.dir}">
+            <classpath refid="classpath"/>
+        </convert>
+    </target>
+
+<!--    <target name="tweak" depends="convert">
+        <ant dir="${src.dir}/tool" inheritRefs="true" target="do_tweak"/>
+    </target>
+
+    <target name="download" depends="tweak">-->
+    <target name="download" depends="convert">
+        <deploycap CapFile="${classroot.dir}/${package}/javacard/${package}.cap"
+                   CrefExe="${env.JC_HOME}/bin/cref"
+                   inEEFile="${eepromImg}"
+                   outEEFile="${eepromImg}">
+            <classpath refid="classpath"/>
+        </deploycap>
+    </target>
+</project>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<!-- The JC_HOME, JC_ANT_TASK_HOME, JAVA_HOME, ANT_HOME, and ANT_CONTRIB_HOME environment variables should be defined and $JC_HOME/bin, $JAVA_HOME/bin and $ANT_HOME/bin should be in $PATH -->
+<project name="Build everything using the sub ant script" basedir="." default = "all">
+
+    <import file="${basedir}/definitions.xml"/>
+
+
+    <target name="dirs">
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${classroot.dir}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${classroot.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${eeprom.dir}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${eeprom.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${eeprom.dir}/manual"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${eeprom.dir}/manual"/>
+            </then>
+        </if>
+
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${eeprom.dir}/tweaked"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${eeprom.dir}/tweaked"/>
+            </then>
+        </if>
+
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${tool.dir}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${tool.dir}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <target name="eeprom">
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${eepromImg}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <touch file="${eepromImg}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <target name="all" depends="clean,card,dock,test"/>
+
+
+    <target name="card" depends="dirs,eeprom">
+        <ant dir="${src.dir}/tool" target="tweak_cap_file" inheritRefs="true"/>
+        <ant dir="${src.dir}/synclib" inheritRefs="true"/>
+        <ant dir="${src.dir}/sync" inheritRefs="true"/>
+        <copy file="${eepromImg}" tofile="${tweakedEepromImg}"/>
+
+        <echo message="sync ready applets"/>
+
+        <copy file="${eepromImg}" tofile="${eepromImg}_empty"/>
+        <ant dir="${src.dir}/test_applet_1" inheritRefs="true"/>
+        <copy file="${eepromImg}" tofile="${eepromImg}_1applet"/>
+        <ant dir="${src.dir}/test_applet_2" inheritRefs="true"/>
+        <copy file="${eepromImg}" tofile="${eepromImg}_2applets"/>
+        <ant dir="${src.dir}/test_applet_3" inheritRefs="true"/>
+
+        <echo message="Not sync ready applets"/>
+
+        <copy file="${tweakedEepromImg}" tofile="${tweakedEepromImg}_empty"/>
+        <ant dir="${src.dir}/test_applet_1_blank" inheritRefs="true"/>
+        <copy file="${tweakedEepromImg}" tofile="${tweakedEepromImg}_1applet"/>
+        <ant dir="${src.dir}/test_applet_2_blank" inheritRefs="true"/>
+        <copy file="${tweakedEepromImg}" tofile="${tweakedEepromImg}_2applets"/>
+        <ant dir="${src.dir}/test_applet_3_blank" inheritRefs="true"/>
+    </target>
+
+
+    <target name="dock" depends="dirs">
+        <javac destdir="${classroot.dir}"
+               compiler="javac1.5"
+               debug="true"
+               includeantruntime="false">
+            <src>
+                <pathelement path="${src.dir}/dock"/>
+            </src>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+
+    <target name="test" depends="dirs,dock">
+        <javac destdir="${classroot.dir}"
+               compiler="javac1.5"
+               debug="true"
+               includeantruntime="false">
+            <src>
+                <pathelement path="${src.dir}/test"/>
+            </src>
+            <classpath refid="classpath"/>
+        </javac>
+
+        <if>
+            <and>
+                <resourceexists>
+                    <file file="${eepromImg}"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${eepromImg}_empty"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${eepromImg}_1applet"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${eepromImg}_2applets"/>
+                </resourceexists>
+            </and>
+            <then>
+<echo>
+
+
++-------------------------------------+
+| Launching test on manual test cases |
++-------------------------------------+
+
+</echo>
+                <java classname="test.Test" fork="true" failonerror="true">
+                    <classpath refid="classpath"/>
+                    <arg value="${eepromImg}"/>
+                    <arg value="${eepromImg}_empty"/>
+                    <arg value="${eepromImg}_1applet"/>
+                    <arg value="${eepromImg}_2applets"/>
+                </java>
+            </then>
+        </if>
+
+        <if>
+            <and>
+                <resourceexists>
+                    <file file="${tweakedEepromImg}"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${tweakedEepromImg}_empty"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${tweakedEepromImg}_1applet"/>
+                </resourceexists>
+                <resourceexists>
+                    <file file="${tweakedEepromImg}_2applets"/>
+                </resourceexists>
+            </and>
+            <then>
+<echo>
+
+
++--------------------------------------+
+| Launching test on tweaked test cases |
++--------------------------------------+
+
+</echo>
+                <java classname="test.Test" fork="true" failonerror="true">
+                    <classpath refid="classpath"/>
+                    <arg value="${tweakedEepromImg}"/>
+                    <arg value="${tweakedEepromImg}_empty"/>
+                    <arg value="${tweakedEepromImg}_1applet"/>
+                    <arg value="${tweakedEepromImg}_2applets"/>
+                </java>
+            </then>
+        </if>
+    </target>
+
+
+    <target name="javadoc">
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${javadoc.dir}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${javadoc.dir}"/>
+            </then>
+        </if>
+        <javadoc sourcepath="${src.dir}" access="private" destdir="${javadoc.dir}" packagenames="sync,synclib,dock">
+            <classpath refid="classpath"/>
+        </javadoc>
+    </target>
+
+
+    <target name="doxygen">
+        <if>
+            <not>
+                <resourceexists>
+                    <file file="${doxygen.dir}"/>
+                </resourceexists>
+            </not>
+            <then>
+                <mkdir dir="${doxygen.dir}"/>
+            </then>
+        </if>
+        <exec executable="doxygen" failonerror="true"/>
+    </target>
+
+
+    <target name="doc" depends="javadoc,doxygen"/>
+
+
+    <target name="tool" depends="dirs">
+        <ant dir="${src.dir}/tool" inheritRefs="true"/>
+    </target>
+
+
+    <target name="clean">
+        <delete dir="${classroot.dir}" quiet="true"/>
+        <delete dir="${eeprom.dir}" quiet="true"/>
+        <delete dir="${javadoc.dir}" quiet="true"/>
+        <delete dir="${tool.dir}" quiet="true"/>
+        <delete dir="${doxygen.dir}" quiet="true"/>
+        <echo message="cleaning libcapfile"/>
+        <exec executable="make" dir="${cc.libcapfile}" failonerror="true">
+            <arg value="clean"/>
+        </exec>
+    </target>
+
+</project>        

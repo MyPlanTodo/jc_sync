@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<project name="Build, convert, download and instantiate sync, syncApplet and Monop 1, 2 and 3" basedir="." default = "">
+
+    <tstamp>
+        <format property="timestamp" pattern="H-m-s-S"/>
+    </tstamp>
+
+<!-- Definitions of the tools -->
+    <property environment="env"/>
+    <property name="jcardkit_dir"     value="${env.JC_HOME}"/>
+    <property name="jdk"              value="${env.JAVA_HOME}"/>
+    <property name="jcardkit_exports" value="${jcardkit_dir}/api_export_files" />
+    <property name="jcardkit_libs"    value="${jcardkit_dir}/lib" />
+
+
+<!-- The directory structure under the base directory -->   
+    <property name="src.dir"   value="${basedir}/src"/>
+    <property name="eeprom.dir"    value="${basedir}/eeprom" />
+    <property name="classroot.dir" value="${basedir}/class"/>
+    <property name="javadoc.dir" value="${basedir}/javadoc"/>
+    <property name="tool.dir" value="${basedir}/bin"/>
+    <property name="doxygen.dir" value="${basedir}/doc/doxygen"/>
+
+
+<!-- Definitions for Java Card ant tasks -->
+    <taskdef name="apdutool"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"  
+             classname="com.sun.javacard.ant.tasks.APDUToolTask" />
+    <taskdef name="capgen"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.CapgenTask" />
+    <taskdef name="maskgen"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.MaskgenTask" />
+    <taskdef name="deploycap"
+             classpath = "/${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.DeployCapTask" />
+    <taskdef name="exp2text"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.Exp2TextTask" />
+    <taskdef name="convert"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.ConverterTask" />
+    <taskdef name="verifyexport"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.VerifyExpTask" />
+    <taskdef name="verifycap"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.VerifyCapTask" />
+    <taskdef name="verifyrevision"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.VerifyRevTask" />
+    <taskdef name="scriptgen"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.tasks.ScriptgenTask" />
+    <typedef name="appletnameaid"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.types.AppletNameAID" />
+    <typedef name="jcainputfile"
+             classpath = "${env.JC_ANT_TASK_HOME}/lib/jctasks.jar"
+             classname="com.sun.javacard.ant.types.JCAInputFile" />
+    <typedef name="exportfiles"
+             classname="org.apache.tools.ant.types.FileSet" />
+
+
+<!-- Definition for ant contrib tasks -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${env.ANT_CONTRIB_HOME}/ant-contrib-1.0b3.jar"/>
+         </classpath>
+    </taskdef>
+
+
+<!-- Definition of the classpath -->
+    <path id="classpath" description="Sets the classpath to Java Card API and tools">
+        <pathelement path="${jcardkit_dir}/lib/api.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/javacardframework.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/converter.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/offcardverifier.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/scriptgen.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/apdutool.jar"/>
+        <pathelement path="${jcardkit_dir}/lib/apduio.jar"/>
+        <pathelement path="${jcardkit_dir}/api_export_files"/>
+        <pathelement path="${classroot.dir}"/>
+    </path>
+
+
+    <path id="pathJava" description="Sets the classpath to Java API">
+        <pathelement path="${jdk}/bin"/>
+        <pathelement path="${jdk}/lib"/>
+        <pathelement path ="${jdk}/jre"/>
+    </path>
+
+
+<!-- Defining the eeprom images to use if they are not supplied -->
+    <if>
+        <not>
+            <isset property="eepromImg"/>
+        </not>
+        <then>
+            <property name="eepromImg" value="${eeprom.dir}/manual/${timestamp}_eeprom_img"/>
+        </then>
+    </if>
+
+    <if>
+        <not>
+            <isset property="tweakedEepromImg"/>
+        </not>
+        <then>
+            <property name="tweakedEepromImg" value="${eeprom.dir}/tweaked/${timestamp}_eeprom_img"/>
+        </then>
+    </if>
+
+
+<!-- Definition of gcc flags -->
+    <property name="cc.libcapfile" value="${basedir}/lib/libcapfile"/>
+    <property name="cc.cc"    value="gcc"/>
+    <property name="cc.flags" value="-Wall -W -Werror -pedantic -std=c99 -g -I${cc.libcapfile}/include"/>
+    <property name="cc.libs"  value="-lzip -L${cc.libcapfile} -lcapfile"/>
+
+</project>

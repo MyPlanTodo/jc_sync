@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<project name="Build cap file tweaking tools" basedir="." default="all">
+    <property file="${basedir}/package.properties"/>
+
+
+    <target name="all" depends="libcapfile_tools,tweak_cap_file"/>
+
+
+    <target name="libcapfile">
+        <echo message="Compiling..."/>
+        <exec executable="make" dir="${cc.libcapfile}" failonerror="true"/>
+        <echo message="Done."/>
+    </target>
+
+
+    <target name="libcapfile_tools" depends="libcapfile">
+        <echo message="Compiling..."/>
+        <exec executable="make" dir="${cc.libcapfile}" failonerror="true">
+            <arg value="tool"/>
+        </exec>
+        <echo message="Done."/>
+    </target>
+
+
+    <target name="tweak_cap_file" depends="libcapfile">
+        <echo message="Compiling..."/>
+        <exec executable="${cc.cc}" failonerror="true">
+            <arg line="${cc.flags}"/>
+            <arg file="${basedir}/tweak/tweak_cap_file.c"/>
+            <arg file="${basedir}/tweak/generic_tweak_functions.c"/>
+            <arg file="${basedir}/tweak/init_javacard_framework_info.c"/>
+            <arg file="${basedir}/tweak/init_synclib_info.c"/>
+            <arg file="${basedir}/tweak/add_field_functions.c"/>
+            <arg file="${basedir}/tweak/create_bytecode_functions.c"/>
+            <arg file="${basedir}/tweak/tweak_class_extending_applet_functions.c"/>
+            <arg file="${basedir}/tweak/synchronizable_itf_functions.c"/>
+            <arg file="${basedir}/tweak/synchronizable_array_fields_itf_functions.c"/>
+            <arg file="${basedir}/tweak/synchronizable_instance_fields_itf_functions.c"/>
+            <arg value="-o"/>
+            <arg file="${tool.dir}/tweak_cap_file"/>
+            <arg line="${cc.libs}"/>
+        </exec>
+        <echo message="Done."/>
+    </target>
+
+
+    <target name="do_tweak">
+        <exec executable="${tool.dir}/tweak_cap_file" failonerror="true">
+            <arg path="${jcardkit_exports}"/>
+            <arg path="${classroot.dir}"/>
+            <arg file="${classroot.dir}/${package}/javacard/${package}.cap"/>
+            <arg file="${classroot.dir}/${package}/javacard/${package}.cap"/>
+        </exec>
+    </target>
+
+
+</project>
